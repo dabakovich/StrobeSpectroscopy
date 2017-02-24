@@ -5,6 +5,8 @@
  */
 package strobe.spectroscopy;
 
+import strobe.controller.Speed;
+import strobe.controller.Stepper;
 import strobe.data.Data;
 import strobe.utils.DataUtils;
 import strobe.utils.fileFilter;
@@ -35,6 +37,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 public class StrobeSpectroscopy extends javax.swing.JFrame {
     
     private ArrayList<Data> dataList = new ArrayList<>();
+
+    private Stepper st;
     
     private final JFreeChart fChart = ChartFactory.createXYLineChart(
                 "Test", "Wavelength", "Signal",
@@ -353,9 +357,8 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         dataList.clear();
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = true;
-        
-        
-    }//GEN-LAST:event_btnStartActionPerformed
+        st.startStepper(Speed.HIGH);
+    }//GEN-LAST:vent_btnStartActionPerformed
 
     private void menuFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileOpenActionPerformed
         int result = fileChooser.showOpenDialog(this);
