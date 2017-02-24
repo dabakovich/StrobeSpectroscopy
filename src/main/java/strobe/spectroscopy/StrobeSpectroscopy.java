@@ -390,7 +390,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     }//GEN-LAST:event_tbtnForwardActionPerformed
 
     private void btnSetZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetZeroActionPerformed
-        
+
     }//GEN-LAST:event_btnSetZeroActionPerformed
 
     private void btnSetMarkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetMarkActionPerformed
