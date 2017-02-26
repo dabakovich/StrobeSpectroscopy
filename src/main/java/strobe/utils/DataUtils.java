@@ -1,5 +1,6 @@
 package strobe.utils;
 
+import org.jfree.data.xy.XYSeries;
 import strobe.data.Data;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,7 +17,7 @@ public class DataUtils {
     
     public DataUtils(){}
     
-    public static void readData(ArrayList<Data> list, String filePathName){
+    public static void readData(XYSeries dataGraphList, String filePathName){
         BufferedReader br;
         
         try {
@@ -36,7 +37,7 @@ public class DataUtils {
                     data[i] = Double.parseDouble(strData[i]);
                 }
                 Data d = new Data(data);
-                list.add(d);
+                dataGraphList.add(d.getWavelength(), d.getIntensity());
             }
             br.close();
         } catch (FileNotFoundException ex) {
@@ -45,15 +46,14 @@ public class DataUtils {
             Logger.getLogger(DataUtils.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
-    public static void writeData(ArrayList<Data> list, String filePathName){
+    public static void writeData(XYSeries dataGraphList, String filePathName){
         BufferedWriter bw;
         
         try {
             bw = new BufferedWriter(new FileWriter(filePathName));
-            int i = 0;
-            
-            for(Data d: list){
-                bw.append(d.getWavelength()+"  "+d.getIntensity());
+
+            for(int i = 0; i<dataGraphList.getMaximumItemCount(); i++){
+                bw.append(dataGraphList.getX(i)+"  "+dataGraphList.getY(i));
                 bw.newLine();
                 i++;
                 if(i%50==0){

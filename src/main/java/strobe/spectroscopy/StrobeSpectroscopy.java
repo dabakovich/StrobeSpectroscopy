@@ -5,21 +5,28 @@
  */
 package strobe.spectroscopy;
 
+import org.jfree.chart.event.ChartChangeEvent;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.general.DatasetChangeEvent;
+import org.jfree.layout.FormatLayout;
+import org.jfree.layout.LCBLayout;
+import org.jfree.ui.tabbedui.VerticalLayout;
 import strobe.controller.Speed;
 import strobe.controller.Stepper;
 import strobe.data.Data;
 import strobe.utils.DataUtils;
 import strobe.utils.fileFilter;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.ComponentOrientation;
+
+import java.awt.*;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.UIManager;
+import java.util.Calendar;
+import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -35,32 +42,50 @@ import org.jfree.data.xy.XYSeriesCollection;
  * @author Олег
  */
 public class StrobeSpectroscopy extends javax.swing.JFrame {
-    
-    private ArrayList<Data> dataList = new ArrayList<>();
+    //Buffer collection for data
+//    private ArrayList<Data> dataList = new ArrayList<>();
 
+    //Date
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    private final LocalDateTime now = LocalDateTime.now();;
+
+    // FreeChart objects
+    private final XYSeries dataGraphList = new XYSeries("");
+    private final XYSeriesCollection dataSet = new XYSeriesCollection( );
+    private final XYLineAndShapeRenderer chartRenderer = new XYLineAndShapeRenderer();
+
+    private final JFreeChart graphChart = ChartFactory.createXYLineChart(
+            dtf.format(now),
+            "Wavelength",
+            "Signal intensity",
+            setData(),
+            PlotOrientation.VERTICAL,
+            true,
+            true,
+            false);
+    private ChartPanel chartPanel = new ChartPanel(graphChart);
+    private final XYPlot plot = graphChart.getXYPlot();
+
+    //Stepper drive instances
     private Stepper st;
-    
-    private final JFreeChart fChart = ChartFactory.createXYLineChart(
-                "Test", "Wavelength", "Signal",
-                getDataSet());
-     
-    private final XYPlot plot = fChart.getXYPlot();
-    private static final String TXT_NM_SPEED = " nm/s"; 
 
+    //Constants and UI labels
+    private static final String TXT_NM_SPEED = " nm/s"; 
+    private static final String OPTION_PANE_TEXT = "Close window to photomultiplier and press OK, then you can open the window";
     private static String[] boxSpeedItems = {"Slow", "Medium", "Fast"};
     private static String[] boxResolutionItems = {"0.2 nm", "0.5 nm", "1.0 nm", "2.0 nm", "5.0 nm"};
-    private static String[] boxWavelength = new String[0];
-    
+    private static double darkCurrent = 0;
+
+    //Boolean flags
     private static boolean IS_START_PRESSED = false;
-    private static boolean IS_PAUSE_PRESSED = false;    
-    
+    private static boolean IS_PAUSE_PRESSED = false;
+
     public StrobeSpectroscopy() {
         initComponents();
         setFileFilter();
         comboBoxSettings();
-        addPlot();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -71,10 +96,6 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private void initComponents() {
 
         fileChooser = new javax.swing.JFileChooser();
-        graphContext = new javax.swing.JPopupMenu();
-        contextOpen = new javax.swing.JMenuItem();
-        contextSave = new javax.swing.JMenuItem();
-        contextClear = new javax.swing.JMenuItem();
         graphPanel = new javax.swing.JPanel();
         controlPanel = new javax.swing.JPanel();
         btnStart = new javax.swing.JButton();
@@ -105,39 +126,13 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
 
         fileChooser.setAcceptAllFileFilterUsed(false);
 
-        contextOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/open.png"))); // NOI18N
-        contextOpen.setText("Open");
-        contextOpen.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                contextOpenActionPerformed(evt);
-            }
-        });
-        graphContext.add(contextOpen);
-
-        contextSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/save.png"))); // NOI18N
-        contextSave.setText("Save");
-        contextSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                contextSaveActionPerformed(evt);
-            }
-        });
-        graphContext.add(contextSave);
-
-        contextClear.setText("Clear graph");
-        graphContext.add(contextClear);
-
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Strobe-spectroscopy");
-        setIconImage(new javax.swing.ImageIcon("//scr//icons//iconFrame.png").getImage()
-        );
+        setIconImage(new javax.swing.ImageIcon(getClass().getResource("/icons/iconFrame.png")).getImage());
         setLocationByPlatform(true);
-        setMinimumSize(new java.awt.Dimension(800, 500));
+        setMinimumSize(new java.awt.Dimension(800, 550));
         setName("strobeFrame"); // NOI18N
-        setPreferredSize(new java.awt.Dimension(800, 500));
-
-        graphPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Spectrum"));
-        graphPanel.setComponentPopupMenu(graphContext);
-        getContentPane().add(graphPanel, java.awt.BorderLayout.CENTER);
+        setPreferredSize(new java.awt.Dimension(800, 550));
 
         controlPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
         controlPanel.setLayout(new javax.swing.BoxLayout(controlPanel, javax.swing.BoxLayout.X_AXIS));
@@ -338,6 +333,20 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         });
         menuAbout.add(menuAboutAbout);
 
+        //chartPanel.setPreferredSize( new java.awt.Dimension(graphPanel.getMinimumSize()));
+
+        chartPanel.setMaximumSize(new Dimension(3000, 2000));
+        graphPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Spectrum"));
+
+        graphPanel.add(chartPanel);
+        graphPanel.setLayout(new GridLayout(0, 1));
+        getContentPane().add(graphPanel, java.awt.BorderLayout.CENTER);
+
+        chartRenderer.setSeriesPaint(0 , Color.RED);
+        chartRenderer.setSeriesStroke(0 , new BasicStroke( 2.0f ));
+        plot.setRenderer(chartRenderer);
+        plot.datasetChanged(new DatasetChangeEvent(graphChart,dataSet));
+
         strobeMenuBar.add(menuAbout);
 
         setJMenuBar(strobeMenuBar);
@@ -348,110 +357,95 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private void menuAboutAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuAboutAboutActionPerformed
         JOptionPane.showMessageDialog(this, "Developed by"+"\n"+"\n"+"Davyd Tabaka and Oleh Kravets"+"\n"+"\n"+"POWERED BY JAVA", "About", 3);
     }//GEN-LAST:event_menuAboutAboutActionPerformed
-
     private void menuFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileExitActionPerformed
         System.exit(0);
     }//GEN-LAST:event_menuFileExitActionPerformed
-
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
-        dataList.clear();
+        dataGraphList.clear();
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = true;
-        st.startStepper(Speed.HIGH);
+        //st.startStepper(Speed.HIGH);
     }//GEN-LAST:vent_btnStartActionPerformed
-
     private void menuFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileOpenActionPerformed
         int result = fileChooser.showOpenDialog(this);
-        
+
         if(result == JFileChooser.APPROVE_OPTION){
             File f = fileChooser.getSelectedFile();
-            
-            DataUtils.readData(dataList, f.getPath());
+            dataGraphList.clear();
+            dataGraphList.setKey(f.getName());
+            DataUtils.readData(dataGraphList, f.getPath());
         }
     }//GEN-LAST:event_menuFileOpenActionPerformed
-
     private void btnPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPauseActionPerformed
         IS_START_PRESSED = false;
         IS_PAUSE_PRESSED = true;
     }//GEN-LAST:event_btnPauseActionPerformed
-
     private void btnStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStopActionPerformed
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = false;
     }//GEN-LAST:event_btnStopActionPerformed
-
     private void tbtnBackwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnBackwardActionPerformed
         if(tbtnForward.isSelected()){
             tbtnForward.setSelected(false);
         }
     }//GEN-LAST:event_tbtnBackwardActionPerformed
-
     private void tbtnForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnForwardActionPerformed
         if(tbtnBackward.isSelected()){
             tbtnBackward.setSelected(false);
         }
     }//GEN-LAST:event_tbtnForwardActionPerformed
-
     private void btnSetZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetZeroActionPerformed
+        int result = JOptionPane.showConfirmDialog(this, OPTION_PANE_TEXT, btnSetZero.getText(), JOptionPane.OK_CANCEL_OPTION);
 
+        if(result == JOptionPane.OK_OPTION){
+            //Get a noise current level and assign it to darkCurrent variable
+            return;
+        }
     }//GEN-LAST:event_btnSetZeroActionPerformed
-
     private void btnSetMarkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetMarkActionPerformed
-        
-    }//GEN-LAST:event_btnSetMarkActionPerformed
 
+    }//GEN-LAST:event_btnSetMarkActionPerformed
     private void menuFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileSaveActionPerformed
         int result = fileChooser.showSaveDialog(this);
-        
+
         if(result == JFileChooser.APPROVE_OPTION){
             File selectedFile = fileChooser.getSelectedFile();
             if(selectedFile.exists()){
                 int resultOverride = JOptionPane.showConfirmDialog(this, "File is already exists.", "Rewrite file?", JOptionPane.YES_NO_CANCEL_OPTION);
-                
+
                 switch(resultOverride){
                     case JOptionPane.NO_OPTION: menuFileSaveActionPerformed(evt);
                             return;
                     case JOptionPane.CANCEL_OPTION: fileChooser.cancelSelection();
                             return;
                 }
-                
+
                 fileChooser.approveSelection();
             }
             String name = selectedFile.getName();
-            
+
             String fileNameForSave = (name.contains(".txt") ? selectedFile.getPath() : selectedFile.getPath()+".txt");
-            
-            if(!dataList.isEmpty()){
-                DataUtils.writeData(dataList, fileNameForSave);
+
+            if(!dataGraphList.isEmpty()){
+                DataUtils.writeData(dataGraphList, fileNameForSave);
             } else {
                 JOptionPane.showMessageDialog(this, "No data to write!");
                 fileChooser.cancelSelection();
             }
         }
-        dataList.clear();
+        dataGraphList.clear();
     }//GEN-LAST:event_menuFileSaveActionPerformed
-
-    private void contextOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_contextOpenActionPerformed
-        menuFileOpenActionPerformed(evt);
-    }//GEN-LAST:event_contextOpenActionPerformed
-
-    private void contextSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_contextSaveActionPerformed
-        menuFileSaveActionPerformed(evt);
-    }//GEN-LAST:event_contextSaveActionPerformed
-
     private void menuFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileActionPerformed
-        dataList.clear();
-        //дописати очищення графіка
+        dataGraphList.clear();
     }//GEN-LAST:event_menuFileActionPerformed
-
     private void cBoxResolutionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cBoxResolutionActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cBoxResolutionActionPerformed
-
     private void cBoxToWavelengthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cBoxToWavelengthActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cBoxToWavelengthActionPerformed
-    
+
+
     private void setFileFilter(){
         FileFilter[] listOfFilters = fileChooser.getChoosableFileFilters();
         for(int i = 0; i<listOfFilters.length; i++){
@@ -467,7 +461,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
             cBoxToWavelength.addItem(300+10*i+" nm");
         }
         cBoxToWavelength.setSelectedItem("900 nm");
-        
+
         for(String value: boxSpeedItems){
             cBoxSpeed.addItem(value);
         }
@@ -480,21 +474,21 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     }
     private double getResolutionValue(){
         switch(cBoxResolution.getSelectedIndex()){
-            case 1: return 0.2;
-            case 2: return 0.5;
-            case 3: return 1.0;
-            case 4: return 2.0;
-            case 5: return 5.0;
+            case 0: return 0.2;
+            case 1: return 0.5;
+            case 2: return 1.0;
+            case 3: return 2.0;
+            case 4: return 5.0;
         }
         return 0;
     }
-    private double getSpeedValue(){
+    private Speed getSpeedValue(){
         switch(cBoxSpeed.getSelectedIndex()){
-            case 1: return 10;
-            case 2: return 200;
-            case 3: return 400;
+            case 0: return Speed.LOW;
+            case 1: return Speed.MEDIUM;
+            case 2: return Speed.FAST;
         }
-        return 0;
+        return Speed.MEDIUM;
     }
     private double getFromWavelengthValue(){
         String res = (String) cBoxFromWavelength.getModel().getSelectedItem();
@@ -506,31 +500,14 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         res = res.substring(0,res.indexOf(" "));
         return Integer.parseInt(res);
     }
-    private void addPlot(){
-        final ChartPanel chartPanel = new ChartPanel(fChart);
-        final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
-        renderer.setSeriesPaint( 1 , Color.RED );
-        renderer.setSeriesStroke( 1 , new BasicStroke(2.0f));
-        plot.setRenderer(renderer);
-        graphPanel.add(chartPanel);
+    private void addData(Data data){
+        dataGraphList.add(data.getWavelength(), data.getIntensity());
     }
-    private XYDataset getDataSet() {
-        XYSeriesCollection dataSet = new XYSeriesCollection();
-        
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        
-        XYSeries data = new XYSeries(dtf.format(now));
-        
-        if(!dataList.isEmpty()){
-            dataList.stream().forEach((d) -> {
-                data.add(d.getWavelength(), d.getIntensity());
-            });
-        }
-        
-        dataSet.addSeries(data);
+    private XYDataset setData(){
+        dataSet.addSeries(dataGraphList);
         return dataSet;
     }
+
     /**
      * @param args the command line arguments
      */
@@ -571,12 +548,8 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> cBoxResolution;
     private javax.swing.JComboBox<String> cBoxSpeed;
     private javax.swing.JComboBox<String> cBoxToWavelength;
-    private javax.swing.JMenuItem contextClear;
-    private javax.swing.JMenuItem contextOpen;
-    private javax.swing.JMenuItem contextSave;
     private javax.swing.JPanel controlPanel;
     private javax.swing.JFileChooser fileChooser;
-    private javax.swing.JPopupMenu graphContext;
     private javax.swing.JPanel graphPanel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JMenu menuAbout;
