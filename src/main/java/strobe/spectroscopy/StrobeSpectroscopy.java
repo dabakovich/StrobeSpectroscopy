@@ -5,6 +5,7 @@
  */
 package strobe.spectroscopy;
 
+import gnu.io.CommPortIdentifier;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Enumeration;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import org.jfree.chart.ChartFactory;
@@ -94,6 +96,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        initListOfCOMports();
 
         fileChooser = new javax.swing.JFileChooser();
         graphPanel = new javax.swing.JPanel();
@@ -501,11 +504,18 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         return Integer.parseInt(res);
     }
     private void addData(Data data){
-        dataGraphList.add(data.getWavelength(), data.getIntensity());
+        dataGraphList.add(data.getWavelength(), data.getIntensity()-darkCurrent);
     }
     private XYDataset setData(){
         dataSet.addSeries(dataGraphList);
         return dataSet;
+    }
+    private void initListOfCOMports(){
+        Enumeration listOfComPorts = CommPortIdentifier.getPortIdentifiers();
+        while(listOfComPorts.hasMoreElements()){
+            System.out.println(listOfComPorts.nextElement());
+            System.out.println("Sup!");
+        }
     }
 
     /**
