@@ -66,7 +66,6 @@ public class Main {
                 default:
                     end = true;
             }
-
         }
     }
 

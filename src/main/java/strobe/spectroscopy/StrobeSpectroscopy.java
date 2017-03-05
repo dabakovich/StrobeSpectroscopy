@@ -47,7 +47,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
 
     //Date
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-    private final LocalDateTime now = LocalDateTime.now();;
+    private final LocalDateTime now = LocalDateTime.now();
 
     // FreeChart objects
     private final XYSeries dataGraphList = new XYSeries("");
