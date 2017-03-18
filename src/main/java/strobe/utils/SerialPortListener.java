@@ -4,6 +4,7 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+import strobe.controller.Stepper;
 
 import java.io.*;
 import java.util.Enumeration;
@@ -11,7 +12,9 @@ import java.util.Enumeration;
 /**
  * Created by David on 19.02.2017.
  */
-public class SerialTest implements SerialPortEventListener {
+public class SerialPortListener implements SerialPortEventListener {
+
+    private Stepper STEPPER;
 
     SerialPort serialPort;
     /** The port we're normally going to use. */
@@ -25,10 +28,16 @@ public class SerialTest implements SerialPortEventListener {
     /** The output stream to the port */
     private OutputStream output;
 
+    boolean stopRead;
+
     /** Milliseconds to block while waiting for port open */
     private static final int TIME_OUT = 2000;
     /** Default bits per second for COM port. */
     private static final int DATA_RATE = 9600;
+
+    public SerialPortListener() {
+//        initialize();
+    }
 
     public void initialize() {
         CommPortIdentifier portId = null;
@@ -62,6 +71,7 @@ public class SerialTest implements SerialPortEventListener {
             serialPort.addEventListener(this);
             serialPort.notifyOnDataAvailable(true);
 
+            System.out.println("Serial connected.");
         } catch (Exception e) {
             System.err.println(e.toString());
         }
@@ -83,6 +93,7 @@ public class SerialTest implements SerialPortEventListener {
             ps.flush();
 //            output.write();
         } catch (Exception ioe) {
+            System.out.println("Error sending string.");
             System.err.println(ioe.toString());
         }
     }
@@ -91,18 +102,33 @@ public class SerialTest implements SerialPortEventListener {
     public void serialEvent(SerialPortEvent serialPortEvent) {
         if (serialPortEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             try {
-                String inputLine = input.readLine();
-                String[] result = inputLine.split(",");
-                float[] resultaArray = new float[result.length];
-                
-                for(int i = 0; i<result.length; i++){
-                    resultaArray[i] = Float.parseFloat(result[i]);
+                System.out.println("Serial in.");
+                if (stopRead) {
+                    System.out.println("Closed.");
+                    return;
                 }
+                String inputLine = input.readLine();
+                System.out.println(inputLine);
+                STEPPER.readLine(inputLine);
+//                String[] result = inputLine.split(",");
+//                float[] resultaArray = new float[result.length];
+                
+//                for(int i = 0; i<result.length; i++){
+//                    resultaArray[i] = Float.parseFloat(result[i]);
+//                }
                 /* 
                     дописати обновелнння графіку і решти даних
                 */
             } catch (Exception e) {
-                System.err.println(e.toString());
+                e.printStackTrace();
+                System.out.println("HERE...");
+
+//                try {
+//                    serialPort.removeEventListener();
+//                    serialPort.close();
+//                } catch (Exception ex) {
+//                    System.err.println(ex.toString());
+//                }
             }
         }
     }

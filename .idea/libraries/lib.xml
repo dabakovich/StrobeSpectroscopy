@@ -9,7 +9,9 @@
     <NATIVE>
       <root url="file://$PROJECT_DIR$/lib/rxtx-2.2" />
     </NATIVE>
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ideaLibSources/jfreechart-1.0.19-sources.jar!/" />
+    </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/lib/rxtx-2.2" recursive="false" />
   </library>
 </component>

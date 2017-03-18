@@ -8,6 +8,7 @@ package strobe.spectroscopy;
 import gnu.io.CommPortIdentifier;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DatasetChangeEvent;
 import org.jfree.layout.FormatLayout;
@@ -66,10 +67,11 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
             true,
             false);
     private ChartPanel chartPanel = new ChartPanel(graphChart);
+    private ValueMarker marker = new ValueMarker(0);
     private final XYPlot plot = graphChart.getXYPlot();
 
     //Stepper drive instances
-    private Stepper st;
+    private static Stepper STEPPER = new Stepper();
 
     //Constants and UI labels
     private static final String TXT_NM_SPEED = " nm/s"; 
@@ -96,7 +98,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        initListOfCOMports();
+//        initListOfCOMports();
 
         fileChooser = new javax.swing.JFileChooser();
         graphPanel = new javax.swing.JPanel();
@@ -129,7 +131,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
 
         fileChooser.setAcceptAllFileFilterUsed(false);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("Strobe-spectroscopy");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/icons/iconFrame.png")).getImage());
         setLocationByPlatform(true);
@@ -348,7 +350,9 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         chartRenderer.setSeriesPaint(0 , Color.RED);
         chartRenderer.setSeriesStroke(0 , new BasicStroke( 2.0f ));
         plot.setRenderer(chartRenderer);
-        plot.datasetChanged(new DatasetChangeEvent(graphChart,dataSet));
+        plot.datasetChanged(new DatasetChangeEvent(graphChart, dataSet));
+        marker.setPaint(Color.red);
+        plot.addDomainMarker(marker);
 
         strobeMenuBar.add(menuAbout);
 
@@ -367,7 +371,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         dataGraphList.clear();
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = true;
-        //st.startStepper(Speed.HIGH);
+        STEPPER.moveStepperToPosAndMeasure(1024, STEPPER.getSpeed(Speed.MEDIUM), 64);
     }//GEN-LAST:vent_btnStartActionPerformed
     private void menuFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileOpenActionPerformed
         int result = fileChooser.showOpenDialog(this);
@@ -386,16 +390,19 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private void btnStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStopActionPerformed
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = false;
+        STEPPER.stopStepper();
     }//GEN-LAST:event_btnStopActionPerformed
     private void tbtnBackwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnBackwardActionPerformed
         if(tbtnForward.isSelected()){
             tbtnForward.setSelected(false);
         }
+        STEPPER.moveStepperToPos(0, STEPPER.getSpeed(getSpeedValue()));
     }//GEN-LAST:event_tbtnBackwardActionPerformed
     private void tbtnForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnForwardActionPerformed
         if(tbtnBackward.isSelected()){
             tbtnBackward.setSelected(false);
         }
+        STEPPER.moveStepperToPos(1024, STEPPER.getSpeed(getSpeedValue()));
     }//GEN-LAST:event_tbtnForwardActionPerformed
     private void btnSetZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetZeroActionPerformed
         int result = JOptionPane.showConfirmDialog(this, OPTION_PANE_TEXT, btnSetZero.getText(), JOptionPane.OK_CANCEL_OPTION);
@@ -498,23 +505,30 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         res = res.substring(0,res.indexOf(" "));
         return Integer.parseInt(res);
     }
+
     private double getToWavelengthValue(){
         String res = (String) cBoxToWavelength.getModel().getSelectedItem();
         res = res.substring(0,res.indexOf(" "));
         return Integer.parseInt(res);
     }
+
     private void addData(Data data){
         dataGraphList.add(data.getWavelength(), data.getIntensity()-darkCurrent);
     }
-    private XYDataset setData(){
+
+    private XYDataset setData() {
         dataSet.addSeries(dataGraphList);
         return dataSet;
     }
-    private void initListOfCOMports(){
+
+    public void updateNewData(double wave, double intensity) {
+        marker.setValue(wave);
+        dataGraphList.add(wave, intensity);
+    }
+
+    private void initListOfCOMports() {
         Enumeration listOfComPorts = CommPortIdentifier.getPortIdentifiers();
-        while(listOfComPorts.hasMoreElements()){
-            System.out.println(listOfComPorts.nextElement());
-            System.out.println("Sup!");
+        while (listOfComPorts.hasMoreElements()) {
         }
     }
 
@@ -539,6 +553,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(StrobeSpectroscopy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        STEPPER.initSerial();
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {

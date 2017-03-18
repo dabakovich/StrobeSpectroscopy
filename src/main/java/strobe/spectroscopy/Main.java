@@ -1,6 +1,6 @@
 package strobe.spectroscopy;
 
-import strobe.utils.SerialTest;
+import strobe.utils.SerialPortListener;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -12,11 +12,11 @@ public class Main {
 
     private final static Scanner SC = new Scanner(System.in);
 
-    private  static SerialTest SERIAL;
+    private  static SerialPortListener SERIAL;
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
-        SERIAL = new SerialTest();
+        SERIAL = new SerialPortListener();
         SERIAL.initialize();
 
 //        Thread t = new Thread() {
