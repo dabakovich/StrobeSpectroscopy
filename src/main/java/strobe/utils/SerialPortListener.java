@@ -109,7 +109,10 @@ public class SerialPortListener implements SerialPortEventListener {
                 }
                 String inputLine = input.readLine();
                 System.out.println(inputLine);
-                STEPPER.readLine(inputLine);
+                
+//                !!!
+//                STEPPER.readLine(inputLine);
+
 //                String[] result = inputLine.split(",");
 //                float[] resultaArray = new float[result.length];
                 
