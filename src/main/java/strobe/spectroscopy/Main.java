@@ -12,12 +12,12 @@ public class Main {
 
     private final static Scanner SC = new Scanner(System.in);
 
-    private  static SerialPortListener SERIAL;
+//    private static SerialPortListener serial;
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
-        SERIAL = new SerialPortListener();
-        SERIAL.initialize();
+//        serial = new SerialPortListener(this);
+//        serial.initialize();
 
 //        Thread t = new Thread() {
 //            public void run() {
@@ -36,7 +36,7 @@ public class Main {
         // dp://mt/spandstp/{speed}/{step}
         // dp://mt/goto/{position}/{speed}
         showMenu();
-        SERIAL.close();
+//        serial.close();
     }
 
     private static void showMenu() {
@@ -90,14 +90,14 @@ public class Main {
     }
 
     private static void startStepMotor(int speed) {
-        SERIAL.sendString("dp://mt/speed/" + speed);
+//        serial.sendString("dp://mt/speed/" + speed);
     }
 
     private static void startStepMotorAndDoMeasure(int speed, int step) {
-        SERIAL.sendString("dp://mt/spandstp/" + speed + "/" + step);
+//        serial.sendString("dp://mt/spandstp/" + speed + "/" + step);
     }
 
     private static void stopStepMotor() {
-        SERIAL.sendString("dp://mt/speed/0");
+//        serial.sendString("dp://mt/speed/0");
     }
 }

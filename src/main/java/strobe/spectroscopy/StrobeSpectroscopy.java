@@ -6,14 +6,9 @@
 package strobe.spectroscopy;
 
 import gnu.io.CommPortIdentifier;
-import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DatasetChangeEvent;
-import org.jfree.layout.FormatLayout;
-import org.jfree.layout.LCBLayout;
-import org.jfree.ui.tabbedui.VerticalLayout;
 import strobe.controller.Speed;
 import strobe.controller.Stepper;
 import strobe.data.Data;
@@ -22,12 +17,8 @@ import strobe.utils.fileFilter;
 
 import java.awt.*;
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Enumeration;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -71,7 +62,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private final XYPlot plot = graphChart.getXYPlot();
 
     //Stepper drive instances
-    private static Stepper STEPPER = new Stepper();
+    private Stepper stepper = new Stepper(this::updateNewData);
 
     //Constants and UI labels
     private static final String TXT_NM_SPEED = " nm/s"; 
@@ -99,6 +90,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 //        initListOfCOMports();
+        stepper.initSerial();
 
         fileChooser = new javax.swing.JFileChooser();
         graphPanel = new javax.swing.JPanel();
@@ -371,7 +363,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         dataGraphList.clear();
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = true;
-        STEPPER.moveStepperToPosAndMeasure(1024, STEPPER.getSpeed(Speed.MEDIUM), 64);
+        stepper.moveStepperToPosAndMeasure(1024, stepper.getSpeed(Speed.MEDIUM), 64);
     }//GEN-LAST:vent_btnStartActionPerformed
     private void menuFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileOpenActionPerformed
         int result = fileChooser.showOpenDialog(this);
@@ -390,19 +382,19 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private void btnStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStopActionPerformed
         IS_PAUSE_PRESSED = false;
         IS_START_PRESSED = false;
-        STEPPER.stopStepper();
+        stepper.stopStepper();
     }//GEN-LAST:event_btnStopActionPerformed
     private void tbtnBackwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnBackwardActionPerformed
         if(tbtnForward.isSelected()){
             tbtnForward.setSelected(false);
         }
-        STEPPER.moveStepperToPos(0, STEPPER.getSpeed(getSpeedValue()));
+        stepper.moveStepperToPos(0, stepper.getSpeed(getSpeedValue()));
     }//GEN-LAST:event_tbtnBackwardActionPerformed
     private void tbtnForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnForwardActionPerformed
         if(tbtnBackward.isSelected()){
             tbtnBackward.setSelected(false);
         }
-        STEPPER.moveStepperToPos(1024, STEPPER.getSpeed(getSpeedValue()));
+        stepper.moveStepperToPos(1024, stepper.getSpeed(getSpeedValue()));
     }//GEN-LAST:event_tbtnForwardActionPerformed
     private void btnSetZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetZeroActionPerformed
         int result = JOptionPane.showConfirmDialog(this, OPTION_PANE_TEXT, btnSetZero.getText(), JOptionPane.OK_CANCEL_OPTION);
@@ -553,7 +545,6 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(StrobeSpectroscopy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        STEPPER.initSerial();
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {

@@ -3,6 +3,8 @@ package strobe.controller;
 import strobe.spectroscopy.StrobeSpectroscopy;
 import strobe.utils.SerialPortListener;
 
+import java.util.function.BiConsumer;
+
 /**
  * Created by Олег on 24.02.2017.
  */
@@ -19,19 +21,24 @@ public class Stepper {
     private int currentWave;
     private long stepperPosition;
 
-    private SerialPortListener SERIAL = new SerialPortListener();
-    private StrobeSpectroscopy SS;
+    private SerialPortListener serial = new SerialPortListener(this::readLine);
+    private BiConsumer<Long, Double> updateDataConsumer;
+//    private StrobeSpectroscopy spectroscopy;
+
+    public Stepper(BiConsumer<Long, Double> updateDataConsumer) {
+        this.updateDataConsumer = updateDataConsumer;
+    }
 
     public void readLine(String line) {
-        if (line.substring(0, 5) == "dp://") {
-            if (line.substring(5, 8) == "res") {
+        if (line.substring(0, 5).equals("dp://")) {
+            if (line.substring(5, 8).equals("res")) {
                 int separatorPosition = line.indexOf("/", 9);
                 long position = Long.valueOf(line.substring(9, separatorPosition));
                 double value = Double.valueOf(line.substring(separatorPosition + 1));
-                SS.updateNewData(position, value);
+                System.out.println(position + ", " + value);
+                updateDataConsumer.accept(position, value);
             }
         }
-        SS.updateNewData(400, 0.7);
     }
 
     public boolean isConnected() {
@@ -40,23 +47,23 @@ public class Stepper {
     }
 
     public void moveStepperToPos(long pos, int speed) {
-        SERIAL.sendString("dp://mt/goto/" + pos + "/" + speed);
+        serial.sendString("dp://mt/goto/" + pos + "/" + speed);
     }
 
     public void moveStepperToPosAndMeasure(long pos, int speed, int step) {
-        SERIAL.sendString("dp://mt/measure/" + pos + "/" + speed + "/" + step);
+        serial.sendString("dp://mt/measure/" + pos + "/" + speed + "/" + step);
     }
 
     public void stopStepper() {
-        SERIAL.sendString("dp://mt/stop");
+        serial.sendString("dp://mt/stop");
     }
 
     public void initSerial() {
-        SERIAL.initialize();
+        serial.initialize();
     }
 
     public void closeSerial() {
-        SERIAL.close();
+        serial.close();
     }
 
     public static int getSpeed(Speed speed) {

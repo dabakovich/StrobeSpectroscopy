@@ -8,13 +8,12 @@ import strobe.controller.Stepper;
 
 import java.io.*;
 import java.util.Enumeration;
+import java.util.function.Consumer;
 
 /**
  * Created by David on 19.02.2017.
  */
 public class SerialPortListener implements SerialPortEventListener {
-
-    private Stepper STEPPER;
 
     SerialPort serialPort;
     /** The port we're normally going to use. */
@@ -35,7 +34,10 @@ public class SerialPortListener implements SerialPortEventListener {
     /** Default bits per second for COM port. */
     private static final int DATA_RATE = 9600;
 
-    public SerialPortListener() {
+    private Consumer<String> inputDataConsumer;
+
+    public SerialPortListener(Consumer<String> inputDataConsumer) {
+        this.inputDataConsumer = inputDataConsumer;
 //        initialize();
     }
 
@@ -108,20 +110,9 @@ public class SerialPortListener implements SerialPortEventListener {
                     return;
                 }
                 String inputLine = input.readLine();
-                System.out.println(inputLine);
-                
-//                !!!
-//                STEPPER.readLine(inputLine);
+//                System.out.println(inputLine);
+                inputDataConsumer.accept(inputLine);
 
-//                String[] result = inputLine.split(",");
-//                float[] resultaArray = new float[result.length];
-                
-//                for(int i = 0; i<result.length; i++){
-//                    resultaArray[i] = Float.parseFloat(result[i]);
-//                }
-                /* 
-                    дописати обновелнння графіку і решти даних
-                */
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("HERE...");
