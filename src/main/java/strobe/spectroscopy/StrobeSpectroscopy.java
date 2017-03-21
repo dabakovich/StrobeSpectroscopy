@@ -123,7 +123,13 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
 
         fileChooser.setAcceptAllFileFilterUsed(false);
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter(){
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent){
+                closingWindowAction();
+                System.exit(0);
+            }
+        });
         setTitle("Strobe-spectroscopy");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/icons/iconFrame.png")).getImage());
         setLocationByPlatform(true);
@@ -357,6 +363,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "Developed by"+"\n"+"\n"+"Davyd Tabaka and Oleh Kravets"+"\n"+"\n"+"POWERED BY JAVA", "About", 3);
     }//GEN-LAST:event_menuAboutAboutActionPerformed
     private void menuFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuFileExitActionPerformed
+        closingWindowAction();
         System.exit(0);
     }//GEN-LAST:event_menuFileExitActionPerformed
     private void btnStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartActionPerformed
@@ -522,6 +529,10 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         Enumeration listOfComPorts = CommPortIdentifier.getPortIdentifiers();
         while (listOfComPorts.hasMoreElements()) {
         }
+    }
+    private void closingWindowAction(){
+        //Write code that will be executed before closing main window
+
     }
 
     /**
