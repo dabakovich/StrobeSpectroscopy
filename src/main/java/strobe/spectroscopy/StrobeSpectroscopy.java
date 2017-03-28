@@ -16,6 +16,7 @@ import strobe.utils.DataUtils;
 import strobe.utils.fileFilter;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -120,6 +121,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         settingMenu = new javax.swing.JMenu();
         menuAbout = new javax.swing.JMenu();
         menuAboutAbout = new javax.swing.JMenuItem();
+        btnCallibrate = new javax.swing.JButton();
 
         fileChooser.setAcceptAllFileFilterUsed(false);
 
@@ -139,6 +141,15 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
 
         controlPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
         controlPanel.setLayout(new javax.swing.BoxLayout(controlPanel, javax.swing.BoxLayout.X_AXIS));
+
+        btnCallibrate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/calibr.png")));
+        btnCallibrate.setToolTipText("To adjust position press the button");
+        btnCallibrate.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnCallibrateActionPerformed(e);
+            }
+        });
 
         btnStart.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/iconStart.png"))); // NOI18N
         btnStart.setToolTipText("Start measurement");
@@ -177,7 +188,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
         spr1.getAccessibleContext().setAccessibleDescription("");
 
         tbtnBackward.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/iconBackward.png"))); // NOI18N
-        tbtnBackward.setToolTipText("Backwar spinning of the driver, while pressed.");
+        tbtnBackward.setToolTipText("Backward spinning of the driver, while pressed.");
         tbtnBackward.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tbtnBackwardActionPerformed(evt);
@@ -280,6 +291,8 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
             }
         });
         controlPanel.add(btnSetMark);
+
+        controlPanel.add(btnCallibrate);
 
         getContentPane().add(controlPanel, java.awt.BorderLayout.SOUTH);
 
@@ -453,7 +466,9 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     private void cBoxToWavelengthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cBoxToWavelengthActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cBoxToWavelengthActionPerformed
+    private void btnCallibrateActionPerformed(java.awt.event.ActionEvent evt){
 
+    }
 
     private void setFileFilter(){
         FileFilter[] listOfFilters = fileChooser.getChoosableFileFilters();
@@ -566,6 +581,7 @@ public class StrobeSpectroscopy extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCallibrate;
     private javax.swing.JButton btnPause;
     private javax.swing.JButton btnSetMark;
     private javax.swing.JButton btnSetZero;
